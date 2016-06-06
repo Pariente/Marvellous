@@ -11,11 +11,20 @@ import Alamofire
 
 struct Artist {
     
-    let fullName: String
+    let firstName: String
+    let middleName: String
+    let lastName: String
+    
+    var fullName: String {
+        return firstName + " " + middleName + " " + lastName
+    }
+    
     var thumbnail = ""
     
     init(dict: [String: AnyObject]) {
-        fullName = dict["fullName"] as! String
+        firstName = dict["firstName"] as! String
+        middleName = dict["middleName"] as! String
+        lastName = dict["lastName"] as! String
         if let thumbnailDict = dict["thumbnail"] as? [String: AnyObject] {
             let path = thumbnailDict["path"] as! String
             let ext = thumbnailDict["extension"] as! String

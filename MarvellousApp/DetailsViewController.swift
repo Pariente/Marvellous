@@ -20,7 +20,13 @@ class DetailsViewController: UIViewController {
     
     func displayComicInfos() {
         titleLabel.text = comic.title
-        descriptionLabel.text = comic.description
+        if comic.description == "" {
+            descriptionLabel.text = "No desc. available."
+            descriptionLabel.textAlignment = NSTextAlignment.Center
+        } else {
+            descriptionLabel.text = "\(comic.description)"
+            descriptionLabel.textAlignment = NSTextAlignment.Justified
+        }
         isbnLabel.text = comic.isbn
         if comic.price == 0 {
             priceLabel?.text = "FREE"

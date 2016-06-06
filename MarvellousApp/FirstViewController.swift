@@ -11,21 +11,28 @@ import Alamofire
 
 class FirstViewController: UIViewController {
     
+    enum MarvelDataType {
+        case Comics, Artists
+    }
+    
+    var dataType = MarvelDataType.Comics {
+        didSet {
+            displayMarvel(dataType, offset: dataOffset)
+        }
+    }
+    
+    var dataOffset: Int {
+        return dataType == .Comics ? comicsArray!.count : artistsArray!.count
+    }
+    
     var artistsArray: [Artist]? = []
     var comicsArray: [Comic]? = []
-    
-    var artistsOffset: Int {
-        return artistsArray!.count
-    }
-    var comicsOffset: Int {
-        return comicsArray!.count
-    }
+
     
     @IBAction func toggle(sender: UISegmentedControl) {
-        comicTV.reloadData()
+        dataType = sender.selectedSegmentIndex == 0 ? .Comics : .Artists
     }
     @IBOutlet weak var segmentedController: UISegmentedControl!
-
 
     @IBOutlet weak var comicTV: UITableView!
     
@@ -34,8 +41,7 @@ class FirstViewController: UIViewController {
         comicTV.estimatedRowHeight = 200.0
         comicTV.rowHeight = UITableViewAutomaticDimension
         
-        displayMarvel("artist", offset: 0)
-        displayMarvel("comic", offset: 0)
+        displayMarvel(dataType, offset: dataOffset)
         
         //On accede à l'instance de l'AppDelegate
 //        let appDelegate = UIApplication.sharedApplication().delegate as! AppDelegate
@@ -77,21 +83,14 @@ class FirstViewController: UIViewController {
 extension FirstViewController : UITableViewDelegate,UITableViewDataSource {
     
     func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        switch(segmentedController.selectedSegmentIndex) {
-        case 0:
-            return (comicsArray?.count ?? 0) + 1
-        case 1:
-            return (artistsArray?.count ?? 0) + 1
-        default:
-            return (comicsArray?.count ?? 0) + 1
-        }
+        return dataType == .Comics ? (comicsArray?.count ?? 0) + 1 : (artistsArray?.count ?? 0) + 1
     }
     
     
     func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
         
-        switch(segmentedController.selectedSegmentIndex) {
-        case 0:
+        switch(dataType) {
+        case .Comics:
             if let array = comicsArray {
                 if indexPath.row == array.count {
                     let cell = tableView.dequeueReusableCellWithIdentifier("LoadMoreCell", forIndexPath: indexPath)
@@ -136,7 +135,7 @@ extension FirstViewController : UITableViewDelegate,UITableViewDataSource {
                     return cell
                 }
             }
-        case 1:
+        case .Artists:
             if let array = artistsArray {
                 if indexPath.row == array.count {
                     let cell = tableView.dequeueReusableCellWithIdentifier("LoadMoreCell", forIndexPath: indexPath)
@@ -153,30 +152,32 @@ extension FirstViewController : UITableViewDelegate,UITableViewDataSource {
                     return cell
                 }
             }
-        default:
-            break
         }
         
         return UITableViewCell()
     }
     
     func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
+        
         tableView.deselectRowAtIndexPath(indexPath, animated: true)
-        switch(segmentedController.selectedSegmentIndex) {
-        case 0:
-            displayMarvel("comic", offset: comicsOffset)
-        case 1:
-            displayMarvel("artist", offset: artistsOffset)
-        default:
-            break
+        
+        switch dataType {
+        case .Comics:
+            if indexPath.row == comicsArray!.count {
+                displayMarvel(dataType, offset: dataOffset)
+            }
+        case .Artists:
+            if indexPath.row == artistsArray!.count {
+                displayMarvel(dataType, offset: dataOffset)
+            }
         }
     }
     
     
-    func displayMarvel(type: String, offset: Int) {
+    func displayMarvel(type: MarvelDataType, offset: Int) {
         switch type {
-        case "comic":
-            Comic.getRemoteComics(offset) {response in
+        case .Comics:
+            Comic.getRemoteComics(dataOffset) {response in
                 switch response.result {
                 case .Success:
                     if let dict = response.result.value as? Dictionary<String, AnyObject> {
@@ -191,8 +192,8 @@ extension FirstViewController : UITableViewDelegate,UITableViewDataSource {
                     print(error)
                 }
             }
-        case "artist":
-            Artist.getRemoteArtists(offset) {response in
+        case .Artists:
+            Artist.getRemoteArtists(dataOffset) {response in
                 switch response.result {
                 case .Success:
                     if let dict = response.result.value as? Dictionary<String, AnyObject> {
@@ -207,8 +208,6 @@ extension FirstViewController : UITableViewDelegate,UITableViewDataSource {
                     print(error)
                 }
             }
-        default:
-            break
         }
     }
 }
